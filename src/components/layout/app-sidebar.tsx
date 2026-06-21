@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { LayoutDashboard, PenTool, History, Settings, Sparkles, Loader2 } from "lucide-react";
+import { LayoutDashboard, PenTool, History, Settings, Loader2 } from "lucide-react";
+import { Logo } from "@/components/brand/logo";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -58,9 +59,8 @@ export function AppSidebar() {
 
   return (
     <aside className="hidden md:flex flex-col w-64 border-r border-border bg-background">
-      <div className="flex items-center gap-2 px-6 py-5 border-b border-border">
-        <Sparkles className="h-5 w-5 text-primary" />
-        <span className="text-lg font-semibold tracking-tight">KontentHub</span>
+      <div className="flex items-center px-5 py-4 border-b border-border">
+        <Logo href="/app" />
       </div>
 
       <nav className="flex-1 flex flex-col gap-1 p-3">

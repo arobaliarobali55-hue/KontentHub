@@ -28,10 +28,7 @@ export const metadata: Metadata = {
     "personal brand",
     "social media",
   ],
-  icons: {
-    icon: "/icon.png",
-    apple: "/apple-icon.png",
-  },
+
   openGraph: {
     title: "KontentHub — LinkedIn content that sounds like you",
     description:
