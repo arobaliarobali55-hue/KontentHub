@@ -43,6 +43,9 @@ export const metadata: Metadata = {
     description:
       "Generate authentic LinkedIn posts tailored to your professional brand.",
   },
+  verification: {
+    google: "iFpLdksMdNqu7iTmoX5GRRFu2WyrUjdf64mVMoizG_g",
+  },
 };
 
 export default function RootLayout({
