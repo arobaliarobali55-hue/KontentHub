@@ -1,34 +1,20 @@
 import Link from "next/link";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 /**
- * KontentHub wordmark + mark.
- * The mark is a simple indigo "stack of content layers" glyph —
- * deliberate, geometric, no AI-design clichés.
+ * KontentHub brand logo — uses the official KH mark image.
  */
 export function LogoMark({ className }: { className?: string }) {
   return (
-    <span
-      className={cn(
-        "inline-grid size-8 place-items-center rounded-lg bg-brand text-brand-foreground shadow-premium-sm",
-        className,
-      )}
-      aria-hidden="true"
-    >
-      <svg
-        viewBox="0 0 24 24"
-        fill="none"
-        className="size-5"
-        stroke="currentColor"
-        strokeWidth={2.2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <path d="M4 7h12" />
-        <path d="M4 12h16" opacity={0.9} />
-        <path d="M4 17h9" opacity={0.7} />
-      </svg>
-    </span>
+    <Image
+      src="/logo.png"
+      alt="KontentHub"
+      width={32}
+      height={32}
+      className={cn("size-8 rounded-lg", className)}
+      priority
+    />
   );
 }
 

@@ -28,12 +28,17 @@ export const metadata: Metadata = {
     "personal brand",
     "social media",
   ],
+  icons: {
+    icon: "/icon.png",
+    apple: "/apple-icon.png",
+  },
   openGraph: {
     title: "KontentHub — LinkedIn content that sounds like you",
     description:
       "Generate authentic LinkedIn posts tailored to your professional brand. No prompts required.",
     type: "website",
     siteName: "KontentHub",
+    images: [{ url: "/logo.png", width: 800, height: 800, alt: "KontentHub Logo" }],
   },
   twitter: {
     card: "summary_large_image",
