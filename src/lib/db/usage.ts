@@ -1,5 +1,6 @@
 import { db } from "@/lib/firebase/server";
 import type { Usage } from "@/lib/types";
+import { FREE_WEEKLY_LIMIT } from "@/lib/constants";
 
 export async function getUsage(userId: string): Promise<Usage | null> {
   const doc = await db.collection("usage").doc(userId).get();
@@ -16,7 +17,7 @@ export async function ensureUsage(userId: string): Promise<Usage> {
     plan: "free",
     week_start: new Date().toISOString(),
     posts_generated: 0,
-    remaining_posts: 4,
+    remaining_posts: FREE_WEEKLY_LIMIT,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   };
@@ -27,6 +28,7 @@ export async function ensureUsage(userId: string): Promise<Usage> {
 
 export async function incrementUsage(userId: string): Promise<Usage> {
   const usageRef = db.collection("usage").doc(userId);
+  const prefRef = db.collection("user_preferences").doc(userId);
   
   const newUsage = await db.runTransaction(async (transaction) => {
     const doc = await transaction.get(usageRef);
@@ -37,7 +39,7 @@ export async function incrementUsage(userId: string): Promise<Usage> {
         plan: "free",
         week_start: new Date().toISOString(),
         posts_generated: 0,
-        remaining_posts: 4,
+        remaining_posts: FREE_WEEKLY_LIMIT,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
@@ -49,11 +51,16 @@ export async function incrementUsage(userId: string): Promise<Usage> {
     const updated = {
       ...currentUsage,
       posts_generated: currentUsage.posts_generated + 1,
-      remaining_posts: Math.max(0, currentUsage.remaining_posts - 1),
+      remaining_posts: currentUsage.plan === "pro" ? 999999 : Math.max(0, currentUsage.remaining_posts - 1),
       updated_at: new Date().toISOString(),
     };
 
     transaction.update(usageRef, updated);
+    transaction.set(prefRef, {
+      weekly_usage: updated.posts_generated,
+      updated_at: new Date().toISOString(),
+    }, { merge: true });
+
     return updated;
   });
 
@@ -62,6 +69,7 @@ export async function incrementUsage(userId: string): Promise<Usage> {
 
 export async function resetUsageIfNewWeek(userId: string): Promise<Usage> {
   const usageRef = db.collection("usage").doc(userId);
+  const prefRef = db.collection("user_preferences").doc(userId);
 
   const updatedUsage = await db.runTransaction(async (transaction) => {
     const doc = await transaction.get(usageRef);
@@ -72,7 +80,7 @@ export async function resetUsageIfNewWeek(userId: string): Promise<Usage> {
         plan: "free",
         week_start: new Date().toISOString(),
         posts_generated: 0,
-        remaining_posts: 4,
+        remaining_posts: FREE_WEEKLY_LIMIT,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
@@ -90,10 +98,15 @@ export async function resetUsageIfNewWeek(userId: string): Promise<Usage> {
       const updated = {
         ...currentUsage,
         week_start: now.toISOString(),
-        remaining_posts: currentUsage.plan === "pro" ? 999999 : 4,
+        posts_generated: 0,
+        remaining_posts: currentUsage.plan === "pro" ? 999999 : FREE_WEEKLY_LIMIT,
         updated_at: now.toISOString(),
       };
       transaction.update(usageRef, updated);
+      transaction.set(prefRef, {
+        weekly_usage: 0,
+        updated_at: now.toISOString(),
+      }, { merge: true });
       return updated;
     }
 
@@ -109,6 +122,7 @@ export async function updateUsagePlan(
   remainingPosts: number
 ): Promise<Usage> {
   const usageRef = db.collection("usage").doc(userId);
+  const prefRef = db.collection("user_preferences").doc(userId);
 
   const newUsage = await db.runTransaction(async (transaction) => {
     const doc = await transaction.get(usageRef);
@@ -137,6 +151,11 @@ export async function updateUsagePlan(
     };
 
     transaction.update(usageRef, updated);
+    transaction.set(prefRef, {
+      current_plan: plan,
+      updated_at: new Date().toISOString(),
+    }, { merge: true });
+
     return updated;
   });
 

@@ -1,7 +1,7 @@
 import { db } from "@/lib/firebase/server";
 import type { Profile } from "@/lib/types";
 
-export async function getProfile(id: string): Promise<Profile | null> {
+async function getProfile(id: string): Promise<Profile | null> {
   const doc = await db.collection("profiles").doc(id).get();
   if (!doc.exists) return null;
   return doc.data() as Profile;
@@ -30,12 +30,12 @@ export async function ensureProfile(input: ProfileUpsertInput): Promise<Profile>
   return newProfile;
 }
 
-export type ProfileUpdate = Partial<{
+type ProfileUpdate = Partial<{
   full_name: string | null;
   linkedin_url: string | null;
 }>;
 
-export async function updateProfile(id: string, patch: ProfileUpdate): Promise<Profile> {
+async function updateProfile(id: string, patch: ProfileUpdate): Promise<Profile> {
   const docRef = db.collection("profiles").doc(id);
   const updatedData = {
     ...patch,

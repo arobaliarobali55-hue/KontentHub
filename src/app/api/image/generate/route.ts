@@ -9,6 +9,7 @@ import {
 } from "@/lib/imageService";
 import { uploadToCloudinary, deleteFromCloudinary } from "@/lib/cloudinary";
 import { v2 as cloudinary } from "cloudinary";
+import { IMAGE_STYLE_PRESETS } from "@/lib/constants";
 
 // ─── Helpers ───────────────────────────────────────────────────────
 function stepError(step: string, error: unknown, status = 500) {
@@ -72,10 +73,13 @@ export async function POST(req: Request) {
     log("parse_body", "Parsing request JSON");
     const body = await req.json().catch(() => ({}));
     postId = body.postId;
+    const style = body.style;
+    const customStylePrompt = body.customStylePrompt;
+
     if (!postId) {
       return stepError("parse_body", "Missing postId in request body", 400);
     }
-    log("parse_body", `postId=${postId}`);
+    log("parse_body", `postId=${postId}, style=${style}, customStylePrompt=${customStylePrompt}`);
 
     // ── Step 3: Ownership check ───────────────────────────────────
     log("ownership_check", `Fetching post ${postId} for user ${userId}`);
@@ -132,8 +136,20 @@ export async function POST(req: Request) {
     }
 
     // ── Step 6: Generate image via NVIDIA ──────────────────────────
-    const promptSubject = `A professional illustration for a LinkedIn post titled: "${post.title}". Brief details: ${post.hook}`;
-    log("nvidia_request", `Calling NVIDIA FLUX API with prompt (${promptSubject.length} chars)`);
+    const stylePreset = IMAGE_STYLE_PRESETS.find((p) => p.id === style);
+    let promptSubject = `A professional illustration for a LinkedIn post titled: "${post.title}". Brief details: ${post.hook}`;
+    
+    if (stylePreset) {
+      promptSubject += `. Style preset: ${stylePreset.prompt}`;
+    } else if (style) {
+      promptSubject += `. Style preset: ${style}`;
+    }
+
+    if (customStylePrompt) {
+      promptSubject += `. Style details: ${customStylePrompt}`;
+    }
+
+    log("nvidia_request", `Calling NVIDIA FLUX API with prompt: "${promptSubject}"`);
     const genStart = Date.now();
     let base64Image: string;
     try {

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { LayoutDashboard, PenTool, History, Settings, Loader2 } from "lucide-react";
+import { LayoutDashboard, PenTool, History, Settings, Loader2, Users2 } from "lucide-react";
 import { Logo } from "@/components/brand/logo";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -11,6 +11,7 @@ import { toast } from "sonner";
 const NAV_ITEMS = [
   { href: "/app", label: "Dashboard", icon: LayoutDashboard },
   { href: "/app/generate", label: "Generate", icon: PenTool },
+  { href: "/app/linkedin-posts", label: "LinkedIn Posts", icon: Users2 },
   { href: "/app/history", label: "History", icon: History },
   { href: "/app/settings", label: "Settings", icon: Settings },
 ];

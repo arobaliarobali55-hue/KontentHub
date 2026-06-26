@@ -1,0 +1,16 @@
+{
+  "name": "KontentHub",
+  "short_name": "KontentHub",
+  "description": "LinkedIn content that sounds like you",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
+  "icons": [
+    {
+      "src": "/icon.png",
+      "sizes": "any",
+      "type": "image/png"
+    }
+  ]
+}

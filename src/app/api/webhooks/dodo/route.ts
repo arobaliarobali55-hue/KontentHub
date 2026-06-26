@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { Webhook } from "svix";
 import { upsertSubscription, getSubscription } from "@/lib/db/subscriptions";
 import { updateUsagePlan } from "@/lib/db/usage";
+import { FREE_WEEKLY_LIMIT } from "@/lib/constants";
 
 export async function POST(req: Request) {
   try {
@@ -73,18 +74,20 @@ export async function POST(req: Request) {
 
       if (userId) {
         const existing = await getSubscription(userId);
-        await upsertSubscription({
-          user_id: userId,
-          dodo_customer_id: existing?.dodo_customer_id ?? null,
-          subscription_id: existing?.subscription_id ?? null,
-          status: "cancelled",
-          current_period_end: existing?.current_period_end ?? null,
-          created_at: existing?.created_at ?? new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        });
-
-        // Downgrade the user's plan to Free, reset credits to standard limit
-        await updateUsagePlan(userId, "free", 4);
+        // Update subscription and downgrade plan in parallel
+        await Promise.all([
+          upsertSubscription({
+            user_id: userId,
+            dodo_customer_id: existing?.dodo_customer_id ?? null,
+            subscription_id: existing?.subscription_id ?? null,
+            status: "cancelled",
+            current_period_end: existing?.current_period_end ?? null,
+            created_at: existing?.created_at ?? new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          }),
+          // Downgrade the user's plan to Free, reset credits to standard limit
+          updateUsagePlan(userId, "free", FREE_WEEKLY_LIMIT),
+        ]);
         console.log(`Downgraded user ${userId} to Free plan in Firestore`);
       }
     }

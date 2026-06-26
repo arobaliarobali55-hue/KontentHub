@@ -20,20 +20,20 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { topic, sourceUrl, tone, length, refineOption, previousPost } = body;
+    const { topic, sourceUrl, tone, length, refineOption, previousPost, manualProfile } = body;
 
     if (!topic && !refineOption) {
       return NextResponse.json({ error: 'Topic is required' }, { status: 400 });
     }
 
-    // Check usage
-    let usage = await resetUsageIfNewWeek(userId);
+    // Check usage and get user preferences in parallel
+    const [usage, prefs] = await Promise.all([
+      resetUsageIfNewWeek(userId),
+      getUserPreferences(userId)
+    ]);
     if (usage.remaining_posts <= 0) {
       return NextResponse.json({ error: 'You have reached your weekly limit. Please upgrade to Pro.' }, { status: 403 });
     }
-
-    // Get user preferences
-    const prefs = await getUserPreferences(userId);
 
     // If sourceUrl is provided, fetch it
     let sourceContent = '';
@@ -74,6 +74,24 @@ PREVIOUS POST CONTENT:
 
 Take the previous post, apply the refinement action, and return the modified version. Keep the tone close to "${tone || prefs?.writing_tone || 'professional'}" except as adjusted by the refinement request.
 `;
+    } else if (manualProfile) {
+      promptContext += `
+USER CONTEXT (MANUAL PROFILE):
+- Full Name: ${manualProfile.full_name || 'N/A'}
+- Profession/Role: ${manualProfile.role || 'N/A'}
+- Industry: ${manualProfile.industry || 'N/A'}
+- Target Audience: ${manualProfile.target_audience || 'N/A'}
+- Interests/Skills: ${manualProfile.interests || 'N/A'}
+- Target Tone: ${manualProfile.tone || 'professional'}
+- CTA Style: ${manualProfile.cta_style || 'subtle'}
+- Use Emojis: Yes, use them tastefully
+
+POST REQUIREMENTS:
+- Topic: ${topic}
+- Tone: ${tone || manualProfile.tone || 'professional'}
+- Length: ${length || 'medium'}
+- Source Material: ${sourceContent ? sourceContent.substring(0, 3000) : 'None'}
+`;
     } else {
       promptContext += `
 USER CONTEXT:
@@ -82,7 +100,6 @@ USER CONTEXT:
 - Industry: ${prefs?.industry || 'N/A'}
 - Skills: ${prefs?.skills?.join(', ') || 'N/A'}
 - Target Audience: ${prefs?.target_audience || 'N/A'}
-- Writing Goal: ${prefs?.writing_goal || 'N/A'}
 - Brand Voice: ${prefs?.brand_voice || 'N/A'}
 - Use Emojis: ${prefs?.use_emojis ? 'Yes, use them tastefully' : 'No emojis'}
 

@@ -5,9 +5,11 @@ import { buttonVariants } from "@/components/ui/button";
 import { Show, UserButton } from "@clerk/nextjs";
 
 const NAV_LINKS = [
-  { href: "#features", label: "Features" },
-  { href: "#how", label: "How it works" },
-  { href: "#pricing", label: "Pricing" },
+  { href: "/features", label: "Features" },
+  { href: "/pricing", label: "Pricing" },
+  { href: "/about", label: "About" },
+  { href: "/blog", label: "Blog" },
+  { href: "/docs", label: "Docs" },
 ];
 
 export function Navbar() {

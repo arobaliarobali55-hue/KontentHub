@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 /**
  * KontentHub brand logo — uses the official KH mark image.
  */
-export function LogoMark({ className }: { className?: string }) {
+function LogoMark({ className }: { className?: string }) {
   return (
     <Image
       src="/logo.png"

@@ -64,12 +64,12 @@ export async function POST(req: Request) {
     const full_name = [first_name, last_name].filter(Boolean).join(' ') || null
 
     try {
-      // 1. Create profile
-      await ensureProfile({ id, email, full_name })
-      // 2. Create default preferences
-      await ensureUserPreferences(id)
-      // 3. Create default usage stats
-      await ensureUsage(id)
+      // 1. Create profile, 2. Create default preferences, 3. Create default usage stats
+      await Promise.all([
+        ensureProfile({ id, email, full_name }),
+        ensureUserPreferences(id),
+        ensureUsage(id),
+      ]);
 
       console.log(`Successfully created db records for user ${id}`)
     } catch (error) {

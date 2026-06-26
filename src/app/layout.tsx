@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Toaster } from "@/components/ui/sonner";
 import GoogleAnalytics from "@/components/google-analytics";
+import { OrganizationSchema, SoftwareApplicationSchema } from "@/components/schema";
 import "./globals.css";
 
 const inter = Inter({
@@ -28,7 +29,17 @@ export const metadata: Metadata = {
     "personal brand",
     "social media",
   ],
-
+  alternates: {
+    canonical: "/",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+    },
+  },
   openGraph: {
     title: "KontentHub — LinkedIn content that sounds like you",
     description:
@@ -58,6 +69,8 @@ export default function RootLayout({
       <html lang="en" className={`${inter.variable} h-full antialiased`} data-scroll-behavior="smooth" suppressHydrationWarning>
         <body className="min-h-full flex flex-col">
           {children}
+          <OrganizationSchema />
+          <SoftwareApplicationSchema />
           <Toaster />
           <GoogleAnalytics />
         </body>

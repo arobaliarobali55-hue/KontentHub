@@ -6,24 +6,77 @@ import {
   getUserPostsCountThisWeek, 
   getUserAveragePostLength 
 } from "@/lib/db/generated-posts";
+import { getBrandBrain } from "@/lib/db/brand-brain";
+import { ensureUserPreferences } from "@/lib/db/preferences";
+import { FREE_WEEKLY_LIMIT } from "@/lib/constants";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { buttonVariants } from "@/components/ui/button";
 import Link from "next/link";
-import { PenTool, History, Star, Zap, Layers, Award, BookOpen, Clock } from "lucide-react";
+import { 
+  PenTool, 
+  History, 
+  Star, 
+  Zap, 
+  Layers, 
+  Award, 
+  BookOpen, 
+  Clock, 
+  Link2, 
+  ArrowRight, 
+  Globe, 
+  ShieldCheck, 
+  RefreshCw 
+} from "lucide-react";
 import { TrendingTopicsClient } from "./trending-topics-client";
 
 export default async function DashboardPage() {
   const { userId } = await auth();
   if (!userId) redirect("/sign-in");
 
+  // Onboarding redirection check
+  const preferences = await ensureUserPreferences(userId);
+  if (preferences.onboarding_status === "pending") {
+    redirect("/app/onboarding");
+  }
+
   const usage = await getUsage(userId);
   const posts = await getUserPosts(userId);
   const postsThisWeek = await getUserPostsCountThisWeek(userId);
   const averageLength = await getUserAveragePostLength(userId);
+  const brandBrain = await getBrandBrain(userId);
+
+  const isLinkedInConnected = preferences.linkedin_connected || brandBrain?.connection_status === "connected";
+  const isBrandBrainInitialized = Boolean(preferences.brand_brain_id || (brandBrain && brandBrain.connection_status === "connected" && brandBrain.headline));
 
   return (
     <div className="space-y-8 max-w-5xl">
-      {/* 1. Welcome Message */}
+      {/* 1. LinkedIn Connection Reminder Banner */}
+      {!isLinkedInConnected && (
+        <div className="relative overflow-hidden rounded-2xl border border-[#0077B5]/20 bg-gradient-to-r from-[#0077B5]/5 via-[#0077B5]/8 to-violet-500/5 p-5 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 animate-in fade-in duration-300">
+          <div className="flex items-start gap-3.5">
+            <div className="h-10 w-10 rounded-xl bg-[#0077B5]/10 flex items-center justify-center text-[#0077B5] shrink-0 mt-0.5 border border-[#0077B5]/20">
+              <Link2 className="h-5 w-5" />
+            </div>
+            <div className="space-y-1">
+              <p className="text-sm font-bold text-foreground">
+                Connect LinkedIn to unlock personalized content
+              </p>
+              <p className="text-xs text-muted-foreground leading-relaxed max-w-2xl">
+                Unlock your AI Brand Brain, auto-personalize posts, and enable direct publishing and automated scheduling!
+              </p>
+            </div>
+          </div>
+          <Link
+            href="/app/onboarding"
+            className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#0077B5] px-4 py-2.5 text-xs font-semibold text-white shadow hover:bg-[#005e8f] transition-all shrink-0"
+          >
+            Connect LinkedIn
+            <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
+        </div>
+      )}
+
+      {/* 2. Welcome Message */}
       <div>
         <h1 className="text-3xl font-bold tracking-tight text-foreground">Dashboard</h1>
         <p className="mt-2 text-muted-foreground">
@@ -31,66 +84,86 @@ export default async function DashboardPage() {
         </p>
       </div>
 
-      {/* 2. Overview Section: Current Plan, Weekly Usage, Remaining Credits */}
-      <div className="grid gap-6 md:grid-cols-3">
+      {/* 3. Overview Section: Plan, Weekly Usage, LinkedIn, Brand Brain */}
+      <div className="grid gap-6 grid-cols-2 lg:grid-cols-4">
         {/* Current Plan */}
         <Card className="border border-border/80 bg-background/50">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">Current Plan</CardTitle>
             <Star className="h-4 w-4 text-primary fill-primary animate-pulse" />
           </CardHeader>
-          <CardContent className="space-y-2">
-            <div className="text-2xl font-bold capitalize text-foreground">
-              {usage?.plan === "pro" ? "⭐ Pro Member" : "Free"}
+          <CardContent className="space-y-1">
+            <div className="text-xl font-bold capitalize text-foreground">
+              {usage?.plan === "pro" ? "⭐ Pro Member" : "Free Plan"}
             </div>
-            {usage?.plan === "pro" ? (
-              <div className="text-xs text-muted-foreground space-y-1.5 pt-1.5 border-t border-border/40 font-medium">
-                <div className="flex items-center gap-1.5 text-emerald-500">
-                  <span className="text-sm">✓</span> Unlimited Posts
-                </div>
-                <div className="flex items-center gap-1.5 text-emerald-500">
-                  <span className="text-sm">✓</span> AI Cover Images Enabled
-                </div>
-                <div className="flex items-center gap-1.5 text-emerald-500">
-                  <span className="text-sm">✓</span> Priority Generation Enabled
-                </div>
-              </div>
+            <p className="text-[10px] text-muted-foreground">
+              {usage?.plan === "pro" ? "Full creator suite unlocked" : "Standard writing limits"}
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* Weekly Usage & Remaining */}
+        <Card className="border border-border/80 bg-background/50">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Weekly Usage</CardTitle>
+            <Zap className="h-4 w-4 text-primary" />
+          </CardHeader>
+          <CardContent className="space-y-1">
+            <div className="text-xl font-bold text-foreground">
+              {postsThisWeek} / {usage?.plan === "pro" ? "Unlimited" : FREE_WEEKLY_LIMIT}
+            </div>
+            <p className="text-[10px] text-muted-foreground">
+              {usage?.plan === "pro" ? "Unlimited remaining" : `${usage?.remaining_posts ?? FREE_WEEKLY_LIMIT} posts left`}
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* LinkedIn Status */}
+        <Card className="border border-border/80 bg-background/50">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">LinkedIn</CardTitle>
+            <Globe className="h-4 w-4 text-primary" />
+          </CardHeader>
+          <CardContent className="space-y-1">
+            <div className="text-xl font-bold text-foreground flex items-center gap-1.5">
+              <span className={`h-2.5 w-2.5 rounded-full ${isLinkedInConnected ? "bg-emerald-500 animate-pulse" : "bg-muted-foreground/30"}`} />
+              {isLinkedInConnected ? "Connected" : "Disconnected"}
+            </div>
+            <p className="text-[10px] text-muted-foreground">
+              {isLinkedInConnected ? "One-click publishing enabled" : "Manual copy posting only"}
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* Brand Brain Status */}
+        <Card className="border border-border/80 bg-background/50">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Brand Brain</CardTitle>
+            <ShieldCheck className="h-4 w-4 text-primary" />
+          </CardHeader>
+          <CardContent className="space-y-1">
+            <div className="text-xl font-bold text-foreground flex items-center gap-1.5">
+              <span className={`h-2.5 w-2.5 rounded-full ${isBrandBrainInitialized ? "bg-emerald-500" : "bg-muted-foreground/30"}`} />
+              {isBrandBrainInitialized ? "Initialized" : "Not Initialized"}
+            </div>
+            {isBrandBrainInitialized ? (
+              <Link 
+                href="/app/onboarding" 
+                className="text-[10px] text-primary hover:underline flex items-center gap-0.5 font-semibold mt-0.5"
+              >
+                <RefreshCw className="h-2.5 w-2.5" />
+                Refresh Brand Brain
+              </Link>
             ) : (
-              <p className="text-xs text-muted-foreground">
-                Standard LinkedIn writer
+              <p className="text-[10px] text-muted-foreground">
+                Using manual profile input
               </p>
             )}
           </CardContent>
         </Card>
-
-        {/* Weekly Usage */}
-        <Card className="border border-border/80 bg-background/50">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Posts This Week</CardTitle>
-            <PenTool className="h-4 w-4 text-primary" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-foreground">{postsThisWeek} posts</div>
-            <p className="text-xs text-muted-foreground mt-1">Generated since Monday</p>
-          </CardContent>
-        </Card>
-
-        {/* Remaining Credits */}
-        <Card className="border border-border/80 bg-background/50">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Remaining Credits</CardTitle>
-            <Zap className="h-4 w-4 text-primary" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-foreground">
-              {usage?.plan === "pro" ? "Unlimited" : (usage?.remaining_posts ?? 4)}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">Resets weekly</p>
-          </CardContent>
-        </Card>
       </div>
 
-      {/* 3. Quick Generate */}
+      {/* 4. Quick Generate */}
       <Card className="border border-border/80 bg-background/50">
         <CardHeader>
           <CardTitle>Quick Generate</CardTitle>

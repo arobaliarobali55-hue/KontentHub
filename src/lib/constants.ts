@@ -63,10 +63,75 @@ export const LENGTHS: { id: LengthId; label: string; description: string }[] = [
 ];
 
 /** Free-plan weekly generation cap (PRD). */
-export const FREE_WEEKLY_LIMIT = 4;
+export const FREE_WEEKLY_LIMIT = 3;
 
 /** Pro plan monthly price in USD (PRD). */
 export const PRO_PRICE_USD = 1.99;
+
+export type ImageStylePresetId =
+  | "photorealistic"
+  | "corporate_office"
+  | "three_d_render"
+  | "minimalist"
+  | "flat_illustration"
+  | "vector_art"
+  | "digital_painting"
+  | "futuristic"
+  | "modern_startup"
+  | "dark_theme";
+
+export const IMAGE_STYLE_PRESETS: { id: ImageStylePresetId; label: string; prompt: string }[] = [
+  {
+    id: "photorealistic",
+    label: "Photorealistic",
+    prompt: "photorealistic style, highly detailed real photograph, professional camera shot",
+  },
+  {
+    id: "corporate_office",
+    label: "Corporate Office",
+    prompt: "corporate office setting, professional workspace, clean corporate aesthetic",
+  },
+  {
+    id: "three_d_render",
+    label: "3D Render",
+    prompt: "abstract 3D render, smooth glossy materials, premium Blender rendering style",
+  },
+  {
+    id: "minimalist",
+    label: "Minimalist",
+    prompt: "minimalist design, clean lines, simple geometric forms, high negative space",
+  },
+  {
+    id: "flat_illustration",
+    label: "Flat Illustration",
+    prompt: "modern flat digital illustration, bold graphic style, simple vector characters",
+  },
+  {
+    id: "vector_art",
+    label: "Vector Art",
+    prompt: "clean vector art, sharp lines, scalable vector graphic look",
+  },
+  {
+    id: "digital_painting",
+    label: "Digital Painting",
+    prompt: "beautiful digital painting, detailed brush strokes, artistic concept art style",
+  },
+  {
+    id: "futuristic",
+    label: "Futuristic",
+    prompt: "futuristic tech concept, neon accents, cyber design elements, high tech atmosphere",
+  },
+  {
+    id: "modern_startup",
+    label: "Modern Startup",
+    prompt: "modern tech startup vibe, vibrant color palette, dynamic creative workspace energy",
+  },
+  {
+    id: "dark_theme",
+    label: "Dark Theme",
+    prompt: "dark mode color grading, deep shadows, subtle neon glowing lights, sleek dark style",
+  },
+];
 
 export const PLANS = {
   free: {
@@ -77,9 +142,9 @@ export const PLANS = {
     description: "Everything you need to start posting consistently.",
     features: [
       `${FREE_WEEKLY_LIMIT} AI-generated posts per week`,
-      "Personalized content from your profile",
-      "Standard generation speed",
-      "Copy to clipboard",
+      "Direct LinkedIn publishing (if connected)",
+      "Manual Profile generation mode",
+      "Pexels image auto-selection",
       "Full post history",
     ],
     cta: "Get started",
@@ -94,11 +159,11 @@ export const PLANS = {
     description: "For creators serious about growing on LinkedIn.",
     features: [
       "Unlimited content generation",
-      "AI cover images",
-      "Premium writing styles",
-      "Faster AI responses",
-      "Export options (TXT, Markdown)",
-      "Early access to new features",
+      "AI cover images (NVIDIA FLUX)",
+      "Custom image upload & styling",
+      "Post scheduling & auto-publish",
+      "Blog, YouTube & PDF import",
+      "Priority generation support",
     ],
     cta: "Start Pro",
     ctaHref: "/sign-up",
