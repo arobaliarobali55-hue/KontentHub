@@ -187,37 +187,75 @@ export async function POST(req: Request) {
       )
     );
 
-    // 5. Query Pexels images (Pro includes automatic image selection)
-    console.log("[Import Blog] Querying Pexels images");
+    // 5. Try to get og:image from source URL first, then query Pexels if needed
+    console.log("[Import Blog] Querying cover images");
+    let ogImageUrl: string | null = null;
+    if (url) {
+      try {
+        const response = await fetch(`https://r.jina.ai/${url}`);
+        if (response.ok) {
+          const html = await response.text();
+          const ogImageMatch = html.match(/<meta[^>]*property="og:image"[^>]*content="([^"]*)"[^>]*>/i) ||
+                               html.match(/<meta[^>]*content="([^"]*)"[^>]*property="og:image"[^>]*>/i);
+          if (ogImageMatch && ogImageMatch[1]) {
+            ogImageUrl = ogImageMatch[1];
+          }
+        }
+      } catch (ogError) {
+        console.error("[Import Blog] Failed to fetch og:image from source URL:", ogError);
+      }
+    }
+
     const postsWithImages = await Promise.all(
       savedPosts.map(async (post, idx) => {
-        const query = buildImageQuery(
-          post.title,
-          object.posts[idx].image_search_query || post.topic || "",
-          brain?.industry
-        );
-        try {
-          const imgResult = await searchPexelsImage(query);
-          if (imgResult) {
-            await updateGeneratedPost(post.id, userId, {
-              cover_image_url: imgResult.imageUrl,
-              image_model: "pexels",
-              image_prompt: query,
-              image_created_at: new Date().toISOString(),
-              pexels_photographer: imgResult.photographer,
-              pexels_photographer_url: imgResult.photographerUrl,
-            });
-            return {
-              ...post,
-              cover_image_url: imgResult.imageUrl,
-              pexels_photographer: imgResult.photographer,
-              pexels_photographer_url: imgResult.photographerUrl,
-              image_model: "pexels",
-            };
+        let coverImageUrl: string | null = ogImageUrl;
+        let imageModel: string | null = ogImageUrl ? "og:image" : null;
+        let pexelsPhotographer: string | null = null;
+        let pexelsPhotographerUrl: string | null = null;
+
+        // If no og:image, use Pexels
+        if (!coverImageUrl) {
+          const query = buildImageQuery(
+            post.title,
+            object.posts[idx].image_search_query || post.topic || "",
+            brain?.industry
+          );
+          try {
+            const imgResult = await searchPexelsImage(query);
+            if (imgResult) {
+              coverImageUrl = imgResult.imageUrl;
+              imageModel = "pexels";
+              pexelsPhotographer = imgResult.photographer;
+              pexelsPhotographerUrl = imgResult.photographerUrl;
+            }
+          } catch (e) {
+            console.warn(`[Import Blog] Pexels search failed for post ${post.id}:`, e);
           }
-        } catch (e) {
-          console.warn(`[Import Blog] Pexels search failed for post ${post.id}:`, e);
         }
+
+        // Update post with cover image if found
+        if (coverImageUrl) {
+          await updateGeneratedPost(post.id, userId, {
+            cover_image_url: coverImageUrl,
+            image_model: imageModel,
+            image_prompt: ogImageUrl ? undefined : buildImageQuery(
+              post.title,
+              object.posts[idx].image_search_query || post.topic || "",
+              brain?.industry
+            ),
+            image_created_at: new Date().toISOString(),
+            pexels_photographer: pexelsPhotographer,
+            pexels_photographer_url: pexelsPhotographerUrl,
+          });
+          return {
+            ...post,
+            cover_image_url: coverImageUrl,
+            pexels_photographer: pexelsPhotographer,
+            pexels_photographer_url: pexelsPhotographerUrl,
+            image_model: imageModel,
+          };
+        }
+
         return post;
       })
     );

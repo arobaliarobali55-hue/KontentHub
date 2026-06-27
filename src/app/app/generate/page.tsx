@@ -647,9 +647,35 @@ function GenerateContent() {
             <div className="min-h-[420px] border border-border/80 bg-card rounded-2xl flex flex-col items-center justify-center p-8 text-center shadow-sm">
               <Loader2 className="h-12 w-12 text-primary animate-spin mb-4" />
               <h3 className="font-bold text-foreground text-lg">Crafting Your Masterpiece</h3>
-              <p className="text-xs text-muted-foreground mt-2 max-w-sm leading-relaxed">
-                Our advanced AI is synthesizing your brand parameters, reading input data, writing high-impact copy, and searching matching media...
-              </p>
+              <div className="w-full max-w-md mt-4 space-y-3">
+                <div className="flex items-center gap-3">
+                  <div className="h-6 w-6 rounded-full bg-primary/20 flex items-center justify-center">
+                    <span className="text-xs text-primary font-bold">1</span>
+                  </div>
+                  <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                    <div className="h-full bg-primary transition-all duration-500" style={{ width: "100%" }}></div>
+                  </div>
+                  <span className="text-xs text-muted-foreground">Analyzing</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="h-6 w-6 rounded-full bg-primary/20 flex items-center justify-center">
+                    <span className="text-xs text-primary font-bold">2</span>
+                  </div>
+                  <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                    <div className="h-full bg-primary transition-all duration-500" style={{ width: "100%" }}></div>
+                  </div>
+                  <span className="text-xs text-muted-foreground">Writing</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="h-6 w-6 rounded-full bg-primary/20 flex items-center justify-center">
+                    <Loader2 className="h-3 w-3 text-primary animate-spin" />
+                  </div>
+                  <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                    <div className="h-full bg-primary transition-all duration-500" style={{ width: "50%" }}></div>
+                  </div>
+                  <span className="text-xs text-muted-foreground">Finalizing</span>
+                </div>
+              </div>
             </div>
           ) : posts.length > 0 ? (
             <div className="space-y-6 animate-in fade-in duration-300">

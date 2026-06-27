@@ -4,8 +4,9 @@ import { generateObject } from 'ai';
 import { createOpenAI } from '@ai-sdk/openai';
 import { z } from 'zod';
 import { getUserPreferences } from '@/lib/db/preferences';
-import { incrementUsage, resetUsageIfNewWeek } from '@/lib/db/usage';
+import { incrementUsage, resetUsageIfNewWeek, getUsage } from '@/lib/db/usage';
 import { createGeneratedPost } from '@/lib/db/generated-posts';
+import { searchPexelsImage, buildImageQuery } from '@/lib/pexelsService';
 
 const nvidia = createOpenAI({
   baseURL: 'https://integrate.api.nvidia.com/v1',
@@ -140,7 +141,7 @@ Ensure the "content" field is formatted with appropriate line breaks for readabi
     });
 
     // Save generated post to DB
-    const savedPost = await createGeneratedPost({
+    let savedPost = await createGeneratedPost({
       user_id: userId,
       title: object.title,
       hook: object.hook,
@@ -162,6 +163,63 @@ Ensure the "content" field is formatted with appropriate line breaks for readabi
 
     // Increment usage
     await incrementUsage(userId);
+
+    // Try to add a cover image!
+    let coverImageUrl: string | null = null;
+    let imageQuery: string | null = null;
+    let imageModel: string | null = null;
+    try {
+      // First check if we have a sourceUrl: try to get og:image or use Pexels
+      if (sourceUrl) {
+        try {
+          // Fetch the source URL and parse for og:image
+          const response = await fetch(`https://r.jina.ai/${sourceUrl}`);
+          if (response.ok) {
+            const html = await response.text();
+            // Look for og:image meta tag
+            const ogImageMatch = html.match(/<meta[^>]*property="og:image"[^>]*content="([^"]*)"[^>]*>/i) ||
+                                 html.match(/<meta[^>]*content="([^"]*)"[^>]*property="og:image"[^>]*>/i);
+            if (ogImageMatch && ogImageMatch[1]) {
+              coverImageUrl = ogImageMatch[1];
+              imageModel = "og:image";
+            }
+          }
+        } catch (ogError) {
+          console.error("Failed to fetch og:image from source URL:", ogError);
+        }
+      }
+
+      const usageInfo = await getUsage(userId);
+      // If no og:image found, proceed with Pexels or AI
+      if (!coverImageUrl) {
+        imageQuery = buildImageQuery(savedPost.title, savedPost.topic || savedPost.hook, prefs?.industry);
+        imageModel = "pexels";
+        
+        if (usageInfo?.plan === 'pro') {
+          // Pro: try to generate AI image (but skip for now to keep simple, use Pexels first)
+          // For now, start with Pexels, then can add AI later
+          const pexelsResult = await searchPexelsImage(imageQuery);
+          coverImageUrl = pexelsResult?.imageUrl || null;
+        } else {
+          // Free: try Pexels
+          const pexelsResult = await searchPexelsImage(imageQuery);
+          coverImageUrl = pexelsResult?.imageUrl || null;
+        }
+      }
+
+      if (coverImageUrl) {
+        // Update saved post with cover image!
+        const { updateGeneratedPost } = await import('@/lib/db/generated-posts');
+        savedPost = await updateGeneratedPost(savedPost.id, userId, {
+          cover_image_url: coverImageUrl,
+          image_prompt: imageQuery,
+          image_model: imageModel,
+          image_created_at: new Date().toISOString(),
+        });
+      }
+    } catch (imageError) {
+      console.error("Cover image addition failed (non-critical):", imageError);
+    }
 
     return NextResponse.json({ success: true, post: savedPost });
   } catch (error: any) {

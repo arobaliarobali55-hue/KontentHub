@@ -27,6 +27,31 @@ function OnboardingContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   
+  // Handle LinkedIn success or error from URL params
+  useEffect(() => {
+    const linkedinSuccess = searchParams.get("linkedin_success");
+    const linkedinError = searchParams.get("linkedin_error");
+    const linkedinErrorDescription = searchParams.get("linkedin_error_description");
+
+    if (linkedinSuccess) {
+      toast.success("LinkedIn connected successfully!");
+      // Clear the param from URL
+      const newSearchParams = new URLSearchParams(searchParams);
+      newSearchParams.delete("linkedin_success");
+      router.replace(`${window.location.pathname}${newSearchParams.toString() ? `?${newSearchParams.toString()}` : ""}`);
+    }
+
+    if (linkedinError) {
+      const errorMsg = linkedinErrorDescription || `LinkedIn error: ${linkedinError}`;
+      toast.error(errorMsg);
+      // Clear the params from URL
+      const newSearchParams = new URLSearchParams(searchParams);
+      newSearchParams.delete("linkedin_error");
+      newSearchParams.delete("linkedin_error_description");
+      router.replace(`${window.location.pathname}${newSearchParams.toString() ? `?${newSearchParams.toString()}` : ""}`);
+    }
+  }, [searchParams, router]);
+  
   const [step, setStep] = useState<SetupStep>("connect");
   const [linkedinUrl, setLinkedinUrl] = useState("");
   const [connectionDetails, setConnectionDetails] = useState<{

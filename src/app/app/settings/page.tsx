@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,7 +13,9 @@ import { Save, User, CreditCard, Loader2, Brain, Link2, Plus, Trash2, CheckCircl
 import { Container } from "@/components/layout/container";
 import type { ExperienceEntry } from "@/lib/types";
 
-export default function SettingsPage() {
+function SettingsContent() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<"brain" | "integrations" | "billing">("brain");
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -73,8 +76,31 @@ export default function SettingsPage() {
   const [isUpgrading, setIsUpgrading] = useState(false);
 
   useEffect(() => {
+    // Handle LinkedIn success or error from URL params
+    const linkedinSuccess = searchParams.get("linkedin_success");
+    const linkedinError = searchParams.get("linkedin_error");
+    const linkedinErrorDescription = searchParams.get("linkedin_error_description");
+
+    if (linkedinSuccess) {
+      toast.success("LinkedIn connected successfully!");
+      // Clear the param from URL
+      const newSearchParams = new URLSearchParams(searchParams);
+      newSearchParams.delete("linkedin_success");
+      router.replace(`${window.location.pathname}${newSearchParams.toString() ? `?${newSearchParams.toString()}` : ""}`);
+    }
+
+    if (linkedinError) {
+      const errorMsg = linkedinErrorDescription || `LinkedIn error: ${linkedinError}`;
+      toast.error(errorMsg);
+      // Clear the params from URL
+      const newSearchParams = new URLSearchParams(searchParams);
+      newSearchParams.delete("linkedin_error");
+      newSearchParams.delete("linkedin_error_description");
+      router.replace(`${window.location.pathname}${newSearchParams.toString() ? `?${newSearchParams.toString()}` : ""}`);
+    }
+
     loadSettings();
-  }, []);
+  }, [searchParams, router]);
 
   const loadSettings = async () => {
     setIsLoading(true);
@@ -749,5 +775,13 @@ export default function SettingsPage() {
 
       </div>
     </div>
+  );
+}
+
+export default function SettingsPage() {
+  return (
+    <Suspense fallback={<div className="max-w-4xl py-12 mx-auto text-center text-muted-foreground"><Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />Loading settings...</div>}>
+      <SettingsContent />
+    </Suspense>
   );
 }
