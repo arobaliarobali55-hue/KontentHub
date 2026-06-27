@@ -45,9 +45,8 @@ export async function GET(req: Request) {
     }
 
     // Direct to real LinkedIn Auth
-    // Use valid LinkedIn scopes that are most likely to be available
-    // Start with the most basic scopes and add more if needed
-    const scope = encodeURIComponent("r_liteprofile w_member_social");
+    // Use OpenID Connect scopes as requested
+    const scope = encodeURIComponent("openid profile email w_member_social");
     const state = encodeURIComponent(`${userId}:${redirectUrlParam}`);
     
     const linkedinAuthUrl = `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${state}&scope=${scope}`;

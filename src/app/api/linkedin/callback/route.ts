@@ -150,61 +150,38 @@ export async function GET(req: Request) {
     const accessToken = tokenData.access_token;
     const refreshToken = tokenData.refresh_token || null;
 
-    // Fetch user profile from LinkedIn API /me endpoint (for r_liteprofile)
-    console.log("[LinkedIn Callback] Fetching profile details");
-    let profileData: any = null;
+    // Fetch user profile from OIDC UserInfo endpoint
+    console.log("[LinkedIn Callback] Fetching UserInfo profile details");
     let sub: string | null = null;
     let fullName = "LinkedIn User";
-    let picture: string | null = null;
     let email: string | null = null;
+    let picture: string | null = null;
     
     try {
-      const profileResponse = await fetch("https://api.linkedin.com/v2/me", {
+      const userinfoResponse = await fetch("https://api.linkedin.com/v2/userinfo", {
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },
       });
 
-      if (profileResponse.ok) {
-        profileData = await profileResponse.json();
-        console.log("[LinkedIn Callback] Profile data:", profileData);
-        sub = profileData.id; // URN ID string
+      if (userinfoResponse.ok) {
+        const profileData = await userinfoResponse.json();
+        console.log("[LinkedIn Callback] UserInfo data:", profileData);
+        sub = profileData.sub; // URN ID string
         
         // Extract name
-        const givenName = profileData.localizedFirstName || "";
-        const familyName = profileData.localizedLastName || "";
-        fullName = `${givenName} ${familyName}`.trim() || "LinkedIn User";
+        const givenName = profileData.given_name || "";
+        const familyName = profileData.family_name || "";
+        fullName = `${givenName} ${familyName}`.trim() || profileData.name || "LinkedIn User";
+        
+        email = profileData.email || null;
+        picture = profileData.picture || null;
       }
     } catch (profileErr) {
-      console.error("[LinkedIn Callback] Failed to fetch profile:", profileErr);
+      console.error("[LinkedIn Callback] Failed to fetch UserInfo:", profileErr);
     }
     
     const urn = sub ? `urn:li:person:${sub}` : `urn:li:person:mock-${Date.now()}`;
-
-    // Try to fetch profile picture if we have the scope
-    try {
-      if (accessToken) {
-        const pictureResponse = await fetch("https://api.linkedin.com/v2/me?projection=(profilePicture(displayImage~:playableStreams))", {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        });
-        if (pictureResponse.ok) {
-          const pictureData = await pictureResponse.json();
-          console.log("[LinkedIn Callback] Picture data:", pictureData);
-          if (pictureData.profilePicture?.["displayImage~"]?.elements?.length > 0) {
-            const imageElement = pictureData.profilePicture["displayImage~"].elements.find((e: any) => 
-              e.identificationMethod === "INDEX" && e.data["com.linkedin.digitalmedia.mediaartifact.StillImage"]
-            ) || pictureData.profilePicture["displayImage~"].elements[0];
-            if (imageElement?.identifiers?.length > 0) {
-              picture = imageElement.identifiers[0].identifier;
-            }
-          }
-        }
-      }
-    } catch (pictureErr) {
-      console.error("[LinkedIn Callback] Failed to fetch profile picture:", pictureErr);
-    }
 
     // Save to preferences and brand brain in parallel
     await Promise.all([
