@@ -152,64 +152,53 @@ export async function GET(req: Request) {
 
     // Fetch user profile from LinkedIn API /me endpoint (for r_liteprofile)
     console.log("[LinkedIn Callback] Fetching profile details");
-    const profileResponse = await fetch("https://api.linkedin.com/v2/me", {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
-
-    if (!profileResponse.ok) {
-      const errorText = await profileResponse.text();
-      console.error(`[LinkedIn Callback] Profile fetch failed: ${errorText}`);
-      throw new Error(`Profile fetch failed: ${errorText}`);
-    }
-
-    const profileData = await profileResponse.json();
-    console.log("[LinkedIn Callback] Profile data:", profileData);
-    const sub = profileData.id; // URN ID string
-    const urn = `urn:li:person:${sub}`;
+    let profileData: any = null;
+    let sub: string | null = null;
+    let fullName = "LinkedIn User";
+    let picture: string | null = null;
+    let email: string | null = null;
     
-    // Extract name
-    const givenName = profileData.localizedFirstName || "";
-    const familyName = profileData.localizedLastName || "";
-    const fullName = `${givenName} ${familyName}`.trim() || "LinkedIn User";
-
-    // Fetch email address (for r_emailaddress)
-    let email = null;
     try {
-      const emailResponse = await fetch("https://api.linkedin.com/v2/emailAddress?q=members&projection=(elements*(handle~))", {
+      const profileResponse = await fetch("https://api.linkedin.com/v2/me", {
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },
       });
-      if (emailResponse.ok) {
-        const emailData = await emailResponse.json();
-        console.log("[LinkedIn Callback] Email data:", emailData);
-        if (emailData.elements && emailData.elements.length > 0) {
-          email = emailData.elements[0]["handle~"]?.emailAddress || null;
-        }
+
+      if (profileResponse.ok) {
+        profileData = await profileResponse.json();
+        console.log("[LinkedIn Callback] Profile data:", profileData);
+        sub = profileData.id; // URN ID string
+        
+        // Extract name
+        const givenName = profileData.localizedFirstName || "";
+        const familyName = profileData.localizedLastName || "";
+        fullName = `${givenName} ${familyName}`.trim() || "LinkedIn User";
       }
-    } catch (emailErr) {
-      console.error("[LinkedIn Callback] Failed to fetch email:", emailErr);
+    } catch (profileErr) {
+      console.error("[LinkedIn Callback] Failed to fetch profile:", profileErr);
     }
+    
+    const urn = sub ? `urn:li:person:${sub}` : `urn:li:person:mock-${Date.now()}`;
 
-    // Fetch profile picture (optional)
-    let picture = null;
+    // Try to fetch profile picture if we have the scope
     try {
-      const pictureResponse = await fetch("https://api.linkedin.com/v2/me?projection=(profilePicture(displayImage~:playableStreams))", {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
-      if (pictureResponse.ok) {
-        const pictureData = await pictureResponse.json();
-        console.log("[LinkedIn Callback] Picture data:", pictureData);
-        if (pictureData.profilePicture?.["displayImage~"]?.elements?.length > 0) {
-          const imageElement = pictureData.profilePicture["displayImage~"].elements.find((e: any) => 
-            e.identificationMethod === "INDEX" && e.data["com.linkedin.digitalmedia.mediaartifact.StillImage"]
-          ) || pictureData.profilePicture["displayImage~"].elements[0];
-          if (imageElement?.identifiers?.length > 0) {
-            picture = imageElement.identifiers[0].identifier;
+      if (accessToken) {
+        const pictureResponse = await fetch("https://api.linkedin.com/v2/me?projection=(profilePicture(displayImage~:playableStreams))", {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
+        if (pictureResponse.ok) {
+          const pictureData = await pictureResponse.json();
+          console.log("[LinkedIn Callback] Picture data:", pictureData);
+          if (pictureData.profilePicture?.["displayImage~"]?.elements?.length > 0) {
+            const imageElement = pictureData.profilePicture["displayImage~"].elements.find((e: any) => 
+              e.identificationMethod === "INDEX" && e.data["com.linkedin.digitalmedia.mediaartifact.StillImage"]
+            ) || pictureData.profilePicture["displayImage~"].elements[0];
+            if (imageElement?.identifiers?.length > 0) {
+              picture = imageElement.identifiers[0].identifier;
+            }
           }
         }
       }
