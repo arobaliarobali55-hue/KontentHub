@@ -108,7 +108,6 @@ export async function GET(req: Request) {
               registerUploadRequest: {
                 recipes: ["urn:li:digitalmediaRecipe:feedshare-image"],
                 owner: personUrn,
-                supportedUploadMechanisms: ["SYNCHRONOUS_UPLOAD"],
               },
             }),
           });
