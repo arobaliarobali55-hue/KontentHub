@@ -2,12 +2,22 @@ import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { getPost, updateGeneratedPost } from "@/lib/db/generated-posts";
 import { getUserPreferences } from "@/lib/db/preferences";
+import { getUsage } from "@/lib/db/usage";
 
 export async function POST(req: Request) {
   try {
     const { userId } = await auth();
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Verify Pro Plan
+    const usage = await getUsage(userId);
+    if (!usage || usage.plan !== "pro") {
+      return NextResponse.json(
+        { error: "Direct publish to LinkedIn is a Pro feature." },
+        { status: 403 }
+      );
     }
 
     const body = await req.json();
