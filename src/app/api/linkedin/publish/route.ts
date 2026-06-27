@@ -93,7 +93,11 @@ export async function POST(req: Request) {
       }
 
       const registerData = await registerRes.json();
-      const uploadUrl = registerData.value.uploadMechanism["com.linkedin.digitalmedia.uploading.MediaUploadMechanism"].uploadUrl;
+      console.log("[Publish API] Register upload response:", registerData);
+      const uploadMechanism = registerData.value.uploadMechanism;
+      // Find the first available upload mechanism
+      const mechanismKey = Object.keys(uploadMechanism)[0];
+      const uploadUrl = uploadMechanism[mechanismKey]?.uploadUrl;
       const assetUrn = registerData.value.asset;
 
       console.log(`[Publish API] Upload registered. Asset URN: ${assetUrn}. Fetching image binary...`);

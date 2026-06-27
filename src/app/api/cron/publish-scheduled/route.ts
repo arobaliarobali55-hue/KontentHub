@@ -114,7 +114,10 @@ export async function GET(req: Request) {
 
           if (registerRes.ok) {
             const registerData = await registerRes.json();
-            const uploadUrl = registerData.value.uploadMechanism["com.linkedin.digitalmedia.uploading.MediaUploadMechanism"].uploadUrl;
+            console.log("[Cron Publisher] Register upload response:", registerData);
+            const uploadMechanism = registerData.value.uploadMechanism;
+            const mechanismKey = Object.keys(uploadMechanism)[0];
+            const uploadUrl = uploadMechanism[mechanismKey]?.uploadUrl;
             const assetUrn = registerData.value.asset;
 
             // Fetch image binary
