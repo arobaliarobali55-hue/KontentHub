@@ -55,13 +55,14 @@ export async function PUT(req: Request) {
 
     // ─── Case B: Regular settings update ─────────────────────────────
     console.log(`[Settings API] Updating settings & Brand Brain for user: ${userId}`);
+    console.log(`[Settings API] Request body:`, body);
     await Promise.all([
       ensureUserPreferences(userId),
       ensureBrandBrain(userId),
     ]);
 
     // Update preferences doc
-    const updatedPrefs = await updateUserPreferences(userId, {
+    const updatePayload = {
       headline: body.headline !== undefined ? body.headline : undefined,
       about: (body.bio ?? body.about) !== undefined ? (body.bio ?? body.about) : undefined,
       industry: body.industry !== undefined ? body.industry : undefined,
@@ -76,7 +77,11 @@ export async function PUT(req: Request) {
       hashtag_style: body.hashtag_style || undefined,
       onboarding_status: body.onboarding_status !== undefined ? body.onboarding_status : undefined,
       manual_profile: body.manual_profile !== undefined ? body.manual_profile : undefined,
-    });
+    };
+    console.log(`[Settings API] Update payload:`, updatePayload);
+    
+    const updatedPrefs = await updateUserPreferences(userId, updatePayload);
+    console.log(`[Settings API] Updated preferences:`, updatedPrefs);
 
     // Update Brand Brain doc
     const updatedBrain = await saveBrandBrain(userId, {

@@ -35,7 +35,10 @@ export default async function DashboardPage() {
 
   // Onboarding redirection check
   const preferences = await ensureUserPreferences(userId);
+  console.log(`[Dashboard] User ID: ${userId}`);
+  console.log(`[Dashboard] Preferences:`, preferences);
   if (preferences.onboarding_status === "pending") {
+    console.log(`[Dashboard] Redirecting to onboarding (status: ${preferences.onboarding_status})`);
     redirect("/app/onboarding");
   }
 
