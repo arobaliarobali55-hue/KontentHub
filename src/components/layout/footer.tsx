@@ -6,9 +6,9 @@ const FOOTER_SECTIONS = [
   {
     title: "Product",
     links: [
-      { href: "#features", label: "Features" },
-      { href: "#how", label: "How it works" },
-      { href: "#pricing", label: "Pricing" },
+      { href: "/features", label: "Features" },
+      { href: "/how-it-works", label: "How it works" },
+      { href: "/pricing", label: "Pricing" },
     ],
   },
   {
