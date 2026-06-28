@@ -764,7 +764,7 @@ function SettingsContent() {
                   <p className="text-xs text-muted-foreground">
                     Subscription management, receipts, and cancellation options are handled via Dodo Payments.
                   </p>
-                  <Button variant="outline" size="sm" onClick={() => toast.info("Contact support@kontenthub.com to cancel.")}>
+                  <Button variant="outline" size="sm" onClick={() => toast.info("Contact help.kontenthub@gmail.com to cancel.")}>
                     Manage Subscription
                   </Button>
                 </div>
