@@ -32,14 +32,32 @@ export default function BlogPage() {
       <Navbar />
       <main className="flex-1">
         <Container className="py-20">
-          <div className="text-center mb-16">
-            <h1 className="text-4xl md:text-5xl font-bold mb-4">Blog</h1>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Learn how to grow your LinkedIn presence
-            </p>
-          </div>
-          <div className="text-center py-20 text-muted-foreground">
-            Blog content coming soon!
+          <div className="max-w-3xl mx-auto">
+            <div className="text-center mb-16">
+              <h1 className="text-4xl md:text-5xl font-bold mb-4">Welcome to the KontentHub Blog</h1>
+              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                Discover practical guides, AI writing tips, LinkedIn growth strategies, product updates, and tutorials designed to help you build your personal brand.
+              </p>
+            </div>
+            
+            <section className="space-y-4">
+              <h2 className="text-2xl font-bold">Topics include:</h2>
+              <ul className="list-disc list-inside space-y-2 text-lg text-muted-foreground">
+                <li>LinkedIn Growth</li>
+                <li>AI Content Creation</li>
+                <li>Personal Branding</li>
+                <li>Marketing Tips</li>
+                <li>Product Updates</li>
+                <li>Tutorials</li>
+              </ul>
+              <p className="text-lg text-muted-foreground mt-4">
+                New articles are published regularly.
+              </p>
+            </section>
+            
+            <div className="text-center py-12 text-muted-foreground">
+              Stay tuned for new content!
+            </div>
           </div>
         </Container>
       </main>
