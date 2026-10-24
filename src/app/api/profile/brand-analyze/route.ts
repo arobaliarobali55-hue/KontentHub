@@ -77,7 +77,7 @@ export async function POST(req: Request) {
     // 3. AI Brand Brain Synthesis via NVIDIA Llama 3.1
     console.log("[Brand Analyze] Synthesizing Brand Brain via LLM");
     const { object: synthesized } = await generateObject({
-      model: nvidia.chat("meta/llama-3.1-70b-instruct"),
+      model: nvidia.chat("deepseek-ai/deepseek-v4.1-flash"),
       schema: z.object({
         headline: z.string().nullable().describe("Professional headline or role title"),
         bio: z.string().nullable().describe("2-3 sentence professional bio synthesized from the profile"),
@@ -206,7 +206,7 @@ export async function POST(req: Request) {
     Return exactly 3 post objects.`;
 
     const { object: postObject } = await generateObject({
-      model: nvidia.chat("meta/llama-3.1-70b-instruct"),
+      model: nvidia.chat("deepseek-ai/deepseek-v4.1-flash"),
       schema: z.object({
         posts: z.array(
           z.object({

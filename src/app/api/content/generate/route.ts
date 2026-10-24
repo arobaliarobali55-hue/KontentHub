@@ -126,7 +126,7 @@ Ensure the "content" field is formatted with appropriate line breaks for readabi
 `;
 
     const { object } = await generateObject({
-      model: nvidia.chat('meta/llama-3.1-70b-instruct'),
+      model: nvidia.chat('deepseek-ai/deepseek-v4.1-flash'),
       schema: z.object({
         title: z.string().describe("A short internal title for this post"),
         hook: z.string().describe("A catchy first line to stop the scroll"),

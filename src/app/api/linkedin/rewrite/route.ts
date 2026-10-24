@@ -83,7 +83,7 @@ export async function POST(req: Request) {
 
     console.log(`[Rewrite Post] Rewriting post ${postId} for user ${userId}`);
     const { object: rewritten } = await generateObject({
-      model: nvidia.chat("meta/llama-3.1-70b-instruct"),
+      model: nvidia.chat("deepseek-ai/deepseek-v4.1-flash"),
       schema: z.object({
         title: z.string().describe("A short title for this post"),
         hook: z.string().describe("Sleek scroll-stopping hook"),

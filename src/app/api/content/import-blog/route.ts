@@ -133,7 +133,7 @@ export async function POST(req: Request) {
 
     console.log("[Import Blog] Generating posts from content");
     const { object } = await generateObject({
-      model: nvidia.chat("meta/llama-3.1-70b-instruct"),
+      model: nvidia.chat("deepseek-ai/deepseek-v4.1-flash"),
       schema: z.object({
         posts: z.array(
           z.object({
