@@ -39,7 +39,7 @@ export async function POST(req: Request) {
 
     // Use NVIDIA LLM to parse the scraped text into our schema
     const { object } = await generateObject({
-      model: nvidia.chat('deepseek-ai/deepseek-v4.1-flash'),
+      model: nvidia.chat('minimaxai/minimax-m3.1-flash'),
       schema: z.object({
         headline: z.string().nullable().describe("The person's professional headline or title"),
         about: z.string().nullable().describe("A summary of their professional background"),

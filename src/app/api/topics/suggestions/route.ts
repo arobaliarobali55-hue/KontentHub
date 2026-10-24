@@ -27,7 +27,7 @@ Do not use corporate cliches. Make them authentic.
 `;
 
     const { object } = await generateObject({
-      model: nvidia.chat("deepseek-ai/deepseek-v4.1-flash"),
+      model: nvidia.chat("minimaxai/minimax-m3.1-flash"),
       schema: z.object({
         suggestions: z.array(
           z.object({

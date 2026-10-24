@@ -147,7 +147,7 @@ ${plan === "pro" ? "PREMIUM MODE: Use advanced AIDA or PAS copywriting framework
 Return an array of exactly 3 post objects.`;
 
     const { object } = await generateObject({
-      model: nvidia.chat("deepseek-ai/deepseek-v4.1-flash"),
+      model: nvidia.chat("minimaxai/minimax-m3.1-flash"),
       schema: z.object({
         posts: z
           .array(postSchema)

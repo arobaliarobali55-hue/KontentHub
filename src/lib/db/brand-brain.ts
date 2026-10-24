@@ -56,13 +56,19 @@ export async function saveBrandBrain(
     finalBrain = defaultBrain;
   } else {
     const current = doc.data() as BrandBrain;
+    const cleanedBrain: Record<string, any> = {};
+    for (const [k, v] of Object.entries(brain)) {
+      if (v !== undefined) {
+        cleanedBrain[k] = v;
+      }
+    }
     const updated = {
       ...current,
-      ...brain,
+      ...cleanedBrain,
       updated_at: now,
     };
-    await docRef.update(updated);
-    finalBrain = updated;
+    await docRef.set(updated, { merge: true });
+    finalBrain = updated as BrandBrain;
   }
 
   return finalBrain;

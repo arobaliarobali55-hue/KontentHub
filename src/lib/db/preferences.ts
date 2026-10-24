@@ -49,15 +49,16 @@ export type UserPreferencesUpdate = Partial<Omit<UserPreferences, "user_id" | "c
 
 export async function updateUserPreferences(userId: string, patch: UserPreferencesUpdate): Promise<UserPreferences> {
   const docRef = db.collection("user_preferences").doc(userId);
-  const updatedData = {
-    ...patch,
-    updated_at: new Date().toISOString(),
-  };
-  await docRef.update(updatedData);
+  const cleanedPatch: Record<string, any> = {};
+  for (const [k, v] of Object.entries(patch)) {
+    if (v !== undefined) {
+      cleanedPatch[k] = v;
+    }
+  }
+  cleanedPatch.updated_at = new Date().toISOString();
+
+  await docRef.set(cleanedPatch, { merge: true });
 
   const updatedDoc = await docRef.get();
-  if (!updatedDoc.exists) {
-    throw new Error("User preferences not found after update");
-  }
   return updatedDoc.data() as UserPreferences;
 }

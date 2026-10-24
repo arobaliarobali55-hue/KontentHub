@@ -4,8 +4,8 @@ import { generateObject } from 'ai';
 import { createOpenAI } from '@ai-sdk/openai';
 import { z } from 'zod';
 import { getUserPreferences } from '@/lib/db/preferences';
-import { incrementUsage, resetUsageIfNewWeek, getUsage } from '@/lib/db/usage';
-import { createGeneratedPost } from '@/lib/db/generated-posts';
+import { incrementUsage, resetUsageIfNewWeek } from '@/lib/db/usage';
+import { createGeneratedPost, updateGeneratedPost } from '@/lib/db/generated-posts';
 import { searchPexelsImage, buildImageQuery } from '@/lib/pexelsService';
 
 const nvidia = createOpenAI({
@@ -36,16 +36,29 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'You have reached your weekly limit. Please upgrade to Pro.' }, { status: 403 });
     }
 
-    // If sourceUrl is provided, fetch it
+    // If sourceUrl is provided, fetch it once with a 5-second timeout and parse og:image
     let sourceContent = '';
+    let extractedOgImage: string | null = null;
     if (sourceUrl) {
       try {
-        const jinaResponse = await fetch(`https://r.jina.ai/${sourceUrl}`);
+        const jinaResponse = await fetch(`https://r.jina.ai/${sourceUrl}`, {
+          headers: process.env.JINA_API_KEY ? { Authorization: `Bearer ${process.env.JINA_API_KEY}` } : {},
+          signal: AbortSignal.timeout(5000),
+        });
         if (jinaResponse.ok) {
-          sourceContent = await jinaResponse.text();
+          const raw = await jinaResponse.text();
+          sourceContent = raw.slice(0, 3500);
+
+          // Extract og:image if present in HTML comments or tags returned by Jina
+          const ogMatch = raw.match(/<meta[^>]*property="og:image"[^>]*content="([^"]*)"/i) ||
+                          raw.match(/<meta[^>]*content="([^"]*)"[^>]*property="og:image"/i) ||
+                          raw.match(/!\[.*?\]\((https?:\/\/[^\s\)]+)\)/);
+          if (ogMatch && ogMatch[1]) {
+            extractedOgImage = ogMatch[1];
+          }
         }
       } catch (e) {
-        console.error("Failed to fetch source URL", e);
+        console.warn("Failed to fetch source URL (proceeding without it):", e);
       }
     }
 
@@ -125,8 +138,9 @@ Generate a JSON object containing the full content package.
 Ensure the "content" field is formatted with appropriate line breaks for readability on LinkedIn.
 `;
 
+    // Fast, ultra-responsive instruct LLM on NVIDIA Build
     const { object } = await generateObject({
-      model: nvidia.chat('deepseek-ai/deepseek-v4.1-flash'),
+      model: nvidia.chat('minimaxai/minimax-m3.1-flash'),
       schema: z.object({
         title: z.string().describe("A short internal title for this post"),
         hook: z.string().describe("A catchy first line to stop the scroll"),
@@ -140,86 +154,48 @@ Ensure the "content" field is formatted with appropriate line breaks for readabi
       prompt: promptContext,
     });
 
-    // Save generated post to DB
-    let savedPost = await createGeneratedPost({
-      user_id: userId,
-      title: object.title,
-      hook: object.hook,
-      content: object.content,
-      cta: object.cta,
-      hashtags: object.hashtags,
-      tone: tone || prefs?.writing_tone || 'professional',
-      length: length || prefs?.preferred_post_length || 'medium',
-      topic: topic,
-      source_url: sourceUrl || null,
-      engagement_score: object.engagement_score,
-      best_time_to_post: object.best_time_to_post,
-      estimated_reading_time: object.estimated_reading_time,
-      cover_image_url: null,
-      is_favorite: false,
-      is_pinned: false,
-      is_archived: false,
-    });
-
-    // Increment usage
-    await incrementUsage(userId);
-
-    // Try to add a cover image!
-    let coverImageUrl: string | null = null;
+    // Save generated post and increment usage in parallel
+    let coverImageUrl = extractedOgImage;
     let imageQuery: string | null = null;
-    let imageModel: string | null = null;
-    try {
-      // First check if we have a sourceUrl: try to get og:image or use Pexels
-      if (sourceUrl) {
-        try {
-          // Fetch the source URL and parse for og:image
-          const response = await fetch(`https://r.jina.ai/${sourceUrl}`);
-          if (response.ok) {
-            const html = await response.text();
-            // Look for og:image meta tag
-            const ogImageMatch = html.match(/<meta[^>]*property="og:image"[^>]*content="([^"]*)"[^>]*>/i) ||
-                                 html.match(/<meta[^>]*content="([^"]*)"[^>]*property="og:image"[^>]*>/i);
-            if (ogImageMatch && ogImageMatch[1]) {
-              coverImageUrl = ogImageMatch[1];
-              imageModel = "og:image";
-            }
-          }
-        } catch (ogError) {
-          console.error("Failed to fetch og:image from source URL:", ogError);
-        }
-      }
+    let imageModel: string | null = extractedOgImage ? 'og:image' : null;
 
-      const usageInfo = await getUsage(userId);
-      // If no og:image found, proceed with Pexels or AI
-      if (!coverImageUrl) {
-        imageQuery = buildImageQuery(savedPost.title, savedPost.topic || savedPost.hook, prefs?.industry);
-        imageModel = "pexels";
-        
-        if (usageInfo?.plan === 'pro') {
-          // Pro: try to generate AI image (but skip for now to keep simple, use Pexels first)
-          // For now, start with Pexels, then can add AI later
-          const pexelsResult = await searchPexelsImage(imageQuery);
-          coverImageUrl = pexelsResult?.imageUrl || null;
-        } else {
-          // Free: try Pexels
-          const pexelsResult = await searchPexelsImage(imageQuery);
-          coverImageUrl = pexelsResult?.imageUrl || null;
-        }
+    // Search Pexels if no og:image found (with quick 3.5s timeout)
+    if (!coverImageUrl) {
+      try {
+        imageQuery = buildImageQuery(object.title, topic || object.hook, prefs?.industry);
+        imageModel = 'pexels';
+        const pexelsResult = await searchPexelsImage(imageQuery);
+        coverImageUrl = pexelsResult?.imageUrl || null;
+      } catch (imgErr) {
+        console.warn("Pexels lookup skipped or failed:", imgErr);
       }
-
-      if (coverImageUrl) {
-        // Update saved post with cover image!
-        const { updateGeneratedPost } = await import('@/lib/db/generated-posts');
-        savedPost = await updateGeneratedPost(savedPost.id, userId, {
-          cover_image_url: coverImageUrl,
-          image_prompt: imageQuery,
-          image_model: imageModel,
-          image_created_at: new Date().toISOString(),
-        });
-      }
-    } catch (imageError) {
-      console.error("Cover image addition failed (non-critical):", imageError);
     }
+
+    const [savedPost] = await Promise.all([
+      createGeneratedPost({
+        user_id: userId,
+        title: object.title,
+        hook: object.hook,
+        content: object.content,
+        cta: object.cta,
+        hashtags: object.hashtags,
+        tone: tone || prefs?.writing_tone || 'professional',
+        length: length || prefs?.preferred_post_length || 'medium',
+        topic: topic,
+        source_url: sourceUrl || null,
+        engagement_score: object.engagement_score,
+        best_time_to_post: object.best_time_to_post,
+        estimated_reading_time: object.estimated_reading_time,
+        cover_image_url: coverImageUrl,
+        image_prompt: imageQuery,
+        image_model: imageModel,
+        image_created_at: coverImageUrl ? new Date().toISOString() : undefined,
+        is_favorite: false,
+        is_pinned: false,
+        is_archived: false,
+      }),
+      incrementUsage(userId),
+    ]);
 
     return NextResponse.json({ success: true, post: savedPost });
   } catch (error: any) {

@@ -61,25 +61,24 @@ export async function PUT(req: Request) {
       ensureBrandBrain(userId),
     ]);
 
-    // Update preferences doc
-    const updatePayload = {
-      headline: body.headline !== undefined ? body.headline : undefined,
-      about: (body.bio ?? body.about) !== undefined ? (body.bio ?? body.about) : undefined,
-      industry: body.industry !== undefined ? body.industry : undefined,
-      skills: body.skills !== undefined ? body.skills : undefined,
-      target_audience: (body.audience ?? body.target_audience) !== undefined ? (body.audience ?? body.target_audience) : undefined,
-      writing_goal: body.writing_goal !== undefined ? body.writing_goal : undefined,
-      writing_tone: body.writing_tone || undefined,
-      preferred_post_length: body.preferred_post_length || undefined,
-      brand_voice: (body.brand_voice ?? body.personal_story) !== undefined ? (body.brand_voice ?? body.personal_story) : undefined,
-      use_emojis: body.use_emojis !== undefined ? body.use_emojis : undefined,
-      cta_style: body.cta_style || undefined,
-      hashtag_style: body.hashtag_style || undefined,
-      onboarding_status: body.onboarding_status !== undefined ? body.onboarding_status : undefined,
-      manual_profile: body.manual_profile !== undefined ? body.manual_profile : undefined,
-    };
-    console.log(`[Settings API] Update payload:`, updatePayload);
-    
+    // Update preferences doc - omit undefined values
+    const updatePayload: Record<string, any> = {};
+    if (body.headline !== undefined) updatePayload.headline = body.headline;
+    if (body.bio !== undefined || body.about !== undefined) updatePayload.about = body.bio ?? body.about;
+    if (body.industry !== undefined) updatePayload.industry = body.industry;
+    if (body.skills !== undefined) updatePayload.skills = body.skills;
+    if (body.audience !== undefined || body.target_audience !== undefined) updatePayload.target_audience = body.audience ?? body.target_audience;
+    if (body.writing_goal !== undefined) updatePayload.writing_goal = body.writing_goal;
+    if (body.writing_tone !== undefined) updatePayload.writing_tone = body.writing_tone;
+    if (body.preferred_post_length !== undefined) updatePayload.preferred_post_length = body.preferred_post_length;
+    if (body.brand_voice !== undefined || body.personal_story !== undefined) updatePayload.brand_voice = body.brand_voice ?? body.personal_story;
+    if (body.use_emojis !== undefined) updatePayload.use_emojis = body.use_emojis;
+    if (body.cta_style !== undefined) updatePayload.cta_style = body.cta_style;
+    if (body.hashtag_style !== undefined) updatePayload.hashtag_style = body.hashtag_style;
+    if (body.onboarding_status !== undefined) updatePayload.onboarding_status = body.onboarding_status;
+    if (body.manual_profile !== undefined) updatePayload.manual_profile = body.manual_profile;
+
+    console.log(`[Settings API] Cleaned update payload:`, updatePayload);
     const updatedPrefs = await updateUserPreferences(userId, updatePayload);
     console.log(`[Settings API] Updated preferences:`, updatedPrefs);
 

@@ -28,3 +28,8 @@ if (apps.length) {
 }
 
 export const db = getFirestore(app);
+try {
+  db.settings({ ignoreUndefinedProperties: true });
+} catch {
+  // settings already configured or read-only
+}
