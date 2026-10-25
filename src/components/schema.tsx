@@ -22,7 +22,7 @@ const organizationSchemaData = {
   "url": baseUrl,
   "logo": `${baseUrl}/logo.png`,
   "sameAs": [
-    "https://linkedin.com/company/kontenthub",
+    "https://www.linkedin.com/company/kontenthub-ai/",
   ]
 };
 
