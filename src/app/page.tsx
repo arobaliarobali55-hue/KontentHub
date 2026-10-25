@@ -1,5 +1,6 @@
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
+import { EarlyAccessBanner } from "@/components/marketing/early-access-banner";
 import { Hero } from "@/components/marketing/hero";
 import { ProblemSolution } from "@/components/marketing/problem-solution";
 import { Features } from "@/components/marketing/features";
@@ -12,6 +13,7 @@ export default function Home() {
     <>
       <Navbar />
       <main className="flex-1">
+        <EarlyAccessBanner />
         <Hero />
         <ProblemSolution />
         <Features />
