@@ -53,7 +53,8 @@ export function EarlyAccessBanner() {
                 href={EARLY_ACCESS_CONFIG.cta.href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground shadow-premium-sm transition-all hover:bg-muted hover:border-brand/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                title="Follow KontentHub on LinkedIn for updates"
+                className="group inline-flex cursor-pointer items-center gap-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground shadow-premium-sm transition-all hover:bg-muted hover:border-brand/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 <span>{EARLY_ACCESS_CONFIG.cta.label}</span>
                 <ArrowRight className="size-3.5 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-foreground" />
