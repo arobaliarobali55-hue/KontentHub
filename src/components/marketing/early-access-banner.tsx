@@ -1,4 +1,4 @@
-import { ArrowRight, Info } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Container } from "@/components/layout/container";
 
 /**
@@ -12,10 +12,10 @@ export const EARLY_ACCESS_CONFIG = {
   title: "Early Access — We're Preparing Something Better!",
   description:
     "KontentHub is currently being improved with new features and a smoother experience. We're preparing for our next launch. Stay tuned for updates!",
-  paymentNotice: {
-    label: "Payment Notice:",
-    text: "We're currently improving our payment system. If you experience any payment or subscription issues, please contact our support team before making another payment.",
-    supportEmail: "help.kontenthub@gmail.com",
+  paymentSuspension: {
+    title: "⚠️ Payments Temporarily Unavailable",
+    description:
+      "We're sorry for the inconvenience! Our payment system is currently under maintenance. Please do not make any payments or purchase a subscription for the time being. We're working hard to fix the issue and will restore payments as soon as possible. Thank you for your patience and understanding.",
   },
   // Valid social media URL configured in schema / organization metadata:
   cta: {
@@ -32,7 +32,7 @@ export function EarlyAccessBanner() {
       className="relative z-40 border-b border-border bg-gradient-to-r from-brand-soft/50 via-background to-brand-soft/40 py-3 sm:py-3.5"
     >
       <Container>
-        <div className="flex flex-col gap-2.5 sm:gap-3">
+        <div className="flex flex-col gap-3">
           {/* Main banner row */}
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             {/* Badge & copy */}
@@ -69,22 +69,16 @@ export function EarlyAccessBanner() {
             )}
           </div>
 
-          {/* Payment Notice Row */}
-          <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2 border-t border-border/60 pt-2.5 text-xs text-muted-foreground leading-relaxed">
-            <div className="inline-flex items-center gap-1.5 font-medium text-foreground shrink-0">
-              <Info className="size-3.5 text-brand" />
-              <span>{EARLY_ACCESS_CONFIG.paymentNotice.label}</span>
+          {/* Payment Suspension Notice Callout */}
+          <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 sm:px-4 sm:py-3 dark:border-amber-400/25 dark:bg-amber-400/10">
+            <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:gap-2">
+              <span className="text-xs sm:text-sm font-semibold text-amber-900 dark:text-amber-200 shrink-0">
+                {EARLY_ACCESS_CONFIG.paymentSuspension.title}
+              </span>
+              <p className="text-xs sm:text-sm leading-relaxed text-foreground/90 dark:text-amber-100/90">
+                {EARLY_ACCESS_CONFIG.paymentSuspension.description}
+              </p>
             </div>
-            <span>
-              We&apos;re currently improving our payment system. If you experience any payment or subscription issues, please{" "}
-              <a
-                href={`mailto:${EARLY_ACCESS_CONFIG.paymentNotice.supportEmail}`}
-                className="font-medium text-foreground underline underline-offset-2 transition-colors hover:text-brand"
-              >
-                contact our support team
-              </a>{" "}
-              before making another payment.
-            </span>
           </div>
         </div>
       </Container>
