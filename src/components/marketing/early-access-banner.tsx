@@ -1,4 +1,4 @@
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Info } from "lucide-react";
 import { Container } from "@/components/layout/container";
 
 /**
@@ -12,6 +12,11 @@ export const EARLY_ACCESS_CONFIG = {
   title: "Early Access — We're Preparing Something Better!",
   description:
     "KontentHub is currently being improved with new features and a smoother experience. We're preparing for our next launch. Stay tuned for updates!",
+  paymentNotice: {
+    label: "Payment Notice:",
+    text: "We're currently improving our payment system. If you experience any payment or subscription issues, please contact our support team before making another payment.",
+    supportEmail: "help.kontenthub@gmail.com",
+  },
   // Valid social media URL configured in schema / organization metadata:
   cta: {
     label: "Follow Us for Updates",
@@ -27,39 +32,60 @@ export function EarlyAccessBanner() {
       className="relative z-40 border-b border-border bg-gradient-to-r from-brand-soft/50 via-background to-brand-soft/40 py-3 sm:py-3.5"
     >
       <Container>
-        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          {/* Badge & copy */}
-          <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:gap-3">
-            <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-brand/10 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider text-brand ring-1 ring-inset ring-brand/25 dark:bg-brand/20">
-              <span className="size-1.5 rounded-full bg-brand animate-pulse" />
-              {EARLY_ACCESS_CONFIG.badge}
-            </span>
-
-            <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2 text-left">
-              <span className="text-xs sm:text-sm font-semibold text-foreground">
-                {EARLY_ACCESS_CONFIG.title}
+        <div className="flex flex-col gap-2.5 sm:gap-3">
+          {/* Main banner row */}
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            {/* Badge & copy */}
+            <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:gap-3">
+              <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-brand/10 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider text-brand ring-1 ring-inset ring-brand/25 dark:bg-brand/20">
+                <span className="size-1.5 rounded-full bg-brand animate-pulse" />
+                {EARLY_ACCESS_CONFIG.badge}
               </span>
-              <span className="hidden text-muted-foreground/60 sm:inline">·</span>
-              <p className="text-xs sm:text-sm text-muted-foreground leading-normal">
-                {EARLY_ACCESS_CONFIG.description}
-              </p>
+
+              <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2 text-left">
+                <span className="text-xs sm:text-sm font-semibold text-foreground">
+                  {EARLY_ACCESS_CONFIG.title}
+                </span>
+                <span className="hidden text-muted-foreground/60 sm:inline">·</span>
+                <p className="text-xs sm:text-sm text-muted-foreground leading-normal">
+                  {EARLY_ACCESS_CONFIG.description}
+                </p>
+              </div>
             </div>
+
+            {/* Social CTA (uses verified LinkedIn organization URL) */}
+            {EARLY_ACCESS_CONFIG.cta.href && (
+              <div className="flex shrink-0 items-center pt-1 md:pt-0">
+                <a
+                  href={EARLY_ACCESS_CONFIG.cta.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground shadow-premium-sm transition-all hover:bg-muted hover:border-brand/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <span>{EARLY_ACCESS_CONFIG.cta.label}</span>
+                  <ArrowRight className="size-3.5 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-foreground" />
+                </a>
+              </div>
+            )}
           </div>
 
-          {/* Social CTA (uses verified LinkedIn organization URL) */}
-          {EARLY_ACCESS_CONFIG.cta.href && (
-            <div className="flex shrink-0 items-center pt-1 md:pt-0">
-              <a
-                href={EARLY_ACCESS_CONFIG.cta.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground shadow-premium-sm transition-all hover:bg-muted hover:border-brand/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              >
-                <span>{EARLY_ACCESS_CONFIG.cta.label}</span>
-                <ArrowRight className="size-3.5 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-foreground" />
-              </a>
+          {/* Payment Notice Row */}
+          <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2 border-t border-border/60 pt-2.5 text-xs text-muted-foreground leading-relaxed">
+            <div className="inline-flex items-center gap-1.5 font-medium text-foreground shrink-0">
+              <Info className="size-3.5 text-brand" />
+              <span>{EARLY_ACCESS_CONFIG.paymentNotice.label}</span>
             </div>
-          )}
+            <span>
+              We&apos;re currently improving our payment system. If you experience any payment or subscription issues, please{" "}
+              <a
+                href={`mailto:${EARLY_ACCESS_CONFIG.paymentNotice.supportEmail}`}
+                className="font-medium text-foreground underline underline-offset-2 transition-colors hover:text-brand"
+              >
+                contact our support team
+              </a>{" "}
+              before making another payment.
+            </span>
+          </div>
         </div>
       </Container>
     </aside>
